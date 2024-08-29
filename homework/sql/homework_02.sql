@@ -23,3 +23,19 @@ VALUES
     ('Pixel 7', 699, 5, '2024-08-09'),
     ('iPhone 13', 899, 3, '2024-08-10')
 ;
+
+/* 1. Использование оператора CASE
+Напишите SQL-запрос, который будет отображать id, model, price, quantity, и еще один столбец с названием price_category,
+который будет иметь значения:
+"High" для телефонов с ценой выше 800.
+"Medium" для телефонов с ценой между 600 и 800 включительно.
+"Low" для телефонов с ценой ниже 600.
+*/
+SELECT  id, model, price, quantity,
+        CASE
+            WHEN price > 800 THEN 'High'
+            WHEN price >= 600 THEN 'Medium'
+            ELSE 'Low'
+        END AS price_category
+    FROM sales
+;
