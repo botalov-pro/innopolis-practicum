@@ -1,2 +1,5 @@
 .idea
 *.pdf
+
+postgres_docker/pgdata
+postgres_docker/pgadmin
