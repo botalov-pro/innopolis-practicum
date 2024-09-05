@@ -3,3 +3,4 @@
 
 postgres_docker/pgdata
 postgres_docker/pgadmin
+postgres_docker/initdb
