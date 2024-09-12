@@ -2,7 +2,7 @@
 
    Исполнитель: Боталов Константин Владимирович
 
-[Ссылка](sql/homework_03.sql) на итоговый SQL-файл.
+[Ссылка](https://github.com/botalov-pro/innopolis-practicum/blob/main/homework/sql/homework_03.sql) на итоговый SQL-файл.
 
 ## ПОДГОТОВКА К ВЫПОЛНЕНИЮ ЗАДАНИЯ
 

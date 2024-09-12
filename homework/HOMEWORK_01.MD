@@ -9,7 +9,7 @@
 
 ## ВЫПОЛНЕНИЕ
 
-[Ссылка](sql/homework_01.sql) на итоговый SQL-файл. 
+[Ссылка](https://github.com/botalov-pro/innopolis-practicum/blob/main/homework/sql/homework_01.sql) на итоговый SQL-файл. 
 
 1. Создание таблицы РЕГИОН
 ```postgresql
