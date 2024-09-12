@@ -77,3 +77,164 @@ INSERT INTO workers (w_id, name_worker, dept_id, job_id,salary)
 __Результат:__ в таблицы WORKERS, DEPARTMENTS, JOBS базы данных INNOPOLIS успешно добавлено новые записи.
 
 ## ВЫПОЛНЕНИЕ ЗАДАНИЯ
+
+### Задача 1
+
+Вывести все отделы с начальниками (используем CTE)
+
+```postgresql
+/* Задание 1.
+   Вывести все отделы с начальниками (используем CTE)
+ */
+
+WITH boss_dept AS (                                         -- создаем CTE (временную таблицу)
+    SELECT name_dept                                        -- выводим только названия отделов
+    FROM workers
+    LEFT JOIN departments d on d.d_id = workers.dept_id     -- Получаем в единую временную таблицу //
+    LEFT JOIN jobs j on j.j_id = workers.job_id             -- информацию о работниках, их должностях и отделах
+    WHERE LOWER(name_job) LIKE 'начальник'                  -- Фильтруем по названию должности 'начальник'
+)
+SELECT * FROM boss_dept;
+```
+![](img/sql_19.png)
+
+__Результат:__ начальники присутствуют в отделах IT и Accounting.
+
+### Задача 2
+
+Вывести те должности, которых нет в отделе Accounting (используем вложенный запрос)
+
+```postgresql
+/* Задание 2.
+   Вывести те должности, которых нет в отделе Accounting (используем вложенный запрос)
+ */
+
+-- Вариант решения 1. Через 2 вложенных запроса
+
+SELECT name_job
+FROM jobs
+WHERE name_job NOT IN (
+    SELECT j.name_job
+    FROM workers w
+    JOIN jobs j ON w.job_id = j.j_id
+    WHERE w.dept_id = (
+        SELECT d_id
+        FROM departments
+        WHERE name_dept = 'Accounting'
+    )
+);
+```
+![](img/sql_20.png)
+
+```postgresql
+-- Вариант решения 2. Через общую таблицу и 1 вложенный запрос
+
+SELECT name_job
+FROM jobs
+WHERE name_job NOT IN (
+    SELECT name_job                                         -- выводим только названия должностей
+    FROM workers
+    LEFT JOIN departments d on d.d_id = workers.dept_id     -- Получаем единую таблицу //
+    LEFT JOIN jobs j on j.j_id = workers.job_id             -- с информацией о работниках, их должностях и отделах
+    WHERE
+        name_dept = 'Accounting'
+    )
+;
+```
+![](img/sql_21.png)
+
+__Результат:__ в отделе Accounting отсутствует должность "помощник".
+
+### Задача 3
+
+Вывести все отделы без начальников (используем вложенные запросы)
+
+```postgresql
+/* Задание 3.
+   Вывести все отделы без начальников (используем вложенные запросы)
+ */
+
+SELECT name_dept
+FROM departments d
+WHERE d.d_id NOT IN (
+    SELECT w.dept_id                                -- подзапрос - выводим id отделов с начальниками
+        FROM workers w
+        JOIN jobs j ON w.job_id = j.j_id
+        WHERE LOWER(j.name_job) LIKE 'начальник'
+    )
+;
+```
+![](img/sql_22.png)
+
+__Результат:__ начальники отсутствуют в отделах Sales, Marketing и Administration.
+
+### Задача 4
+
+Вывести всех работников у которых зарплата больше чем у единственного специалиста отдела Sales (используем вложенные запросы)
+
+```postgresql
+/* Задание 4.
+   Вывести всех работников у которых зарплата больше чем у единственного специалиста отдела Sales (используем вложенные запросы)
+ */
+
+SELECT name_worker, salary
+FROM workers
+WHERE salary > (
+  SELECT salary
+  FROM workers
+  WHERE dept_id = (SELECT d_id FROM departments WHERE name_dept = 'Sales')  -- фильтруем по отделу Sales
+    AND job_id = (SELECT j_id FROM jobs WHERE name_job = 'специалист')      -- фильтруем по должности 'специалист'
+  LIMIT 1                                                                   -- страхуемся, чтобы был единственный сотрудник
+);
+```
+![](img/sql_23.png)
+
+__Результат:__ У семерых сотрудников заплата выше, чем у единственного специалиста отдела Sales.
+
+### Задача 5
+
+Вывести всех работников у которых зарплата больше чем у единственного специалиста отдела Sales (используем CTE)
+
+```postgresql
+/* Задание 5.
+   Вывести всех работников у которых зарплата больше чем у единственного специалиста отдела Sales (используем CTE)
+ */
+
+-- Вариант решения 1. С одним CTE и одним подзапросом.
+
+WITH sales_specialist AS (
+  SELECT *
+  FROM workers w
+  JOIN jobs j ON w.job_id = j.j_id
+  JOIN departments d ON w.dept_id = d.d_id
+  WHERE d.name_dept = 'Sales' AND j.name_job = 'специалист'
+  LIMIT 1
+)
+SELECT w.name_worker, w.salary
+FROM workers w
+WHERE w.salary > (SELECT salary FROM sales_specialist)
+;
+```
+![](img/sql_24.png)
+
+```postgresql
+-- Вариант решения 2. С двумя CTE и подзапросом в одном из CTE.
+
+WITH sales_specialist AS (                                      -- выбираем единственного специалиста из отдела Sales и его зарплату
+    SELECT w.w_id, w.salary
+    FROM workers w
+    JOIN jobs j ON w.job_id = j.j_id
+    JOIN departments d ON w.dept_id = d.d_id
+    WHERE d.name_dept = 'Sales' AND j.name_job = 'специалист'
+    LIMIT 1
+),
+higher_salaries AS (                                            -- выбираем всех специалистов у кого зарплата выше
+    SELECT w.name_worker, w.salary
+    FROM workers w
+    WHERE w.salary > (SELECT salary FROM sales_specialist)
+)
+SELECT * FROM higher_salaries;                                  -- выводим данные
+```
+![](img/sql_25.png)
+
+__Результат:__ У семерых сотрудников заплата выше, чем у единственного специалиста отдела Sales.
