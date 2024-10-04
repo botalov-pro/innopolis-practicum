@@ -148,6 +148,10 @@ VALUES
 (9, 1), (9, 2),
 (10, 1), (10, 10);
 
+/* Проверяем, что создалась наша база данных */
+SELECT datname FROM pg_database
+WHERE datname='socialnet';
+
 /* Найдите всех друзей пользователя с id = 1. */
 SELECT *
 FROM friend_requests
