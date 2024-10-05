@@ -90,67 +90,145 @@ VALUES
 (8, 1, 3, 'text', 'Porro aperiam voluptate quo eos nobis. Qui blanditiis cum id eos. Est sit reprehenderit consequatur eum corporis. Molestias quia quo sit architecto aut.')
 ;
 
+/* Удаление таблицы FRIEND_REQUESTS */
 DROP TABLE IF EXISTS friend_requests;
+
+/* Создание таблицы FRIEND_REQUESTS */
 CREATE TABLE friend_requests (
-	initiator_user_id INT  NOT NULL,
-    target_user_id INT  NOT NULL,
-    status VARCHAR(50),
-	requested_at TIMESTAMP DEFAULT NOW(),
-	updated_at TIMESTAMP,
-    PRIMARY KEY (initiator_user_id, target_user_id),
-    FOREIGN KEY (initiator_user_id) REFERENCES users(id) ON UPDATE CASCADE ON DELETE CASCADE,
-    FOREIGN KEY (target_user_id) REFERENCES users(id) ON UPDATE CASCADE ON DELETE CASCADE
+	id BIGSERIAL PRIMARY KEY,                           -- уникальный идентификатор запроса
+    initiator_user_id INT NOT NULL,                     -- идентификатор пользователя, который отправил запрос на дружбу
+    target_user_id INT NOT NULL,                        -- идентификатор пользователя, которому отправлен запрос
+    status INT NOT NULL,                                -- статус запроса
+	requested_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,   -- временная метка, когда был отправлен запрос
+	updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,     -- временная метка последнего обновления статуса запроса
+    FOREIGN KEY (initiator_user_id) REFERENCES users(id) ON UPDATE CASCADE ON DELETE RESTRICT,
+    FOREIGN KEY (target_user_id) REFERENCES users(id) ON UPDATE CASCADE ON DELETE RESTRICT,
+    FOREIGN KEY (status) REFERENCES status(id) ON UPDATE CASCADE ON DELETE RESTRICT
 );
 
+/* Заполнение таблицы MESSAGES */
 INSERT INTO friend_requests (initiator_user_id, target_user_id, status, requested_at, updated_at)
 VALUES
-(1, 10, 'approved', '2023-01-05 06:40:37', '2023-01-05 16:28:19'),
-(1, 2, 'requested', '2023-01-06 07:33:23', NULL),
-(1, 3, 'approved', '2023-01-07 01:53:07', '2023-01-18 16:22:56'),
-(4, 1, 'approved', '2023-01-08 15:57:26', '2023-01-15 18:12:00'),
-(5, 2, 'approved', '2023-01-08 18:22:00', '2023-01-14 08:25:00'),
-(6, 3, 'unfriended', '2023-01-09 17:07:59', '2023-01-09 17:12:45'),
-(7, 1, 'requested', '2023-01-09 06:20:23', NULL),
-(8, 6, 'unfriended', '2023-01-10 01:50:03', '2023-01-10 06:50:59'),
-(9, 7, 'approved', '2023-01-11 22:52:09', NULL),
-(10, 6, 'approved', '2023-01-12 00:32:15', '2023-01-12 10:22:15');
+(1, 10, 5, '2023-01-05 06:40:37', '2023-01-05 16:28:19'),
+(1, 2, 4, '2023-01-06 07:33:23', NULL),
+(1, 3, 5, '2023-01-07 01:53:07', '2023-01-18 16:22:56'),
+(4, 1, 5, '2023-01-08 15:57:26', '2023-01-15 18:12:00'),
+(5, 2, 5, '2023-01-08 18:22:00', '2023-01-14 08:25:00'),
+(6, 3, 6, '2023-01-09 17:07:59', '2023-01-09 17:12:45'),
+(7, 1, 4, '2023-01-09 06:20:23', NULL),
+(8, 6, 6, '2023-01-10 01:50:03', '2023-01-10 06:50:59'),
+(9, 7, 5, '2023-01-11 22:52:09', NULL),
+(10, 6, 5, '2023-01-12 00:32:15', '2023-01-12 10:22:15');
 
-
+/* Удаление таблицы COMMUNITIES */
 DROP TABLE IF EXISTS communities;
+
+/* Создание таблицы COMMUNITIES */
 CREATE TABLE communities(
-	id SERIAL PRIMARY KEY,
-	name VARCHAR(150)
+	id SERIAL PRIMARY KEY,                              -- Уникальный идентификатор группы
+	name VARCHAR(150) NOT NULL,                         -- Название группы
+    description TEXT,                                   -- Описание группы
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,     -- Дата создания группы
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP      -- Дата обновления
 );
 
-INSERT INTO communities (name)
-VALUES ('atque'), ('beatae'), ('est'), ('eum'), ('hic'), ('nemo'), ('quis'), ('rerum'), ('tempora'), ('voluptas');
-
-
-DROP TABLE IF EXISTS users_communities;
-CREATE TABLE users_communities(
-	user_id INT NOT NULL,
-	community_id INT NOT NULL,
-    PRIMARY KEY (user_id, community_id),
-    FOREIGN KEY (user_id) REFERENCES users(id) ON UPDATE CASCADE ON DELETE CASCADE,
-    FOREIGN KEY (community_id) REFERENCES communities(id) ON UPDATE CASCADE ON DELETE CASCADE
-);
-
-INSERT INTO users_communities (user_id, community_id)
+/* Заполнение таблицы COMMUNITIES */
+INSERT INTO communities (name, description)
 VALUES
-(1, 1), (1, 2), (1, 3),
-(2, 1), (2, 2),
-(3, 1), (3, 2), (3, 10), (3, 5), (3, 8),
-(4, 1), (4, 2), (4, 3), (4, 8),
-(5, 1), (5, 2), (5, 3), (5, 6), (5, 8), (5, 10),
-(6, 1), (6, 2), (6, 3), (6, 6),
-(7, 1), (7, 2), (7, 3), (7, 8), (7, 7), (7, 6),
-(8, 1), (8, 2), (8, 3), (8, 5), (8, 7), (8, 9),
-(9, 1), (9, 2),
-(10, 1), (10, 10);
+    ('atque', 'Phasellus hendrerit lectus vel massa laoreet, at efficitur arcu vestibulum. Morbi a finibus ante. Pellentesque'),
+    ('beatae', 'Nunc ultricies eros a erat finibus pharetra. Class aptent taciti sociosqu ad litora torquent per.'),
+    ('est', 'Etiam bibendum, purus quis bibendum tempus, velit dui consequat augue, sed venenatis arcu nunc in.'),
+    ('eum', 'Aliquam facilisis, ipsum nec hendrerit cursus, felis nulla consequat purus, at cursus sem est ac.'),
+    ('hic', 'Maecenas ultricies massa nec posuere iaculis. Vivamus odio quam, placerat ut semper at, tristique sit.'),
+    ('nemo', NULL),
+    ('quis', NULL),
+    ('rerum', NULL),
+    ('tempora', NULL),
+    ('voluptas', NULL)
+;
+
+/* Удаление таблицы ROLE */
+DROP TABLE IF EXISTS role;
+
+/* Создание таблицы ROLE */
+CREATE TABLE role (
+    id SERIAL PRIMARY KEY,              -- Уникальный идентификатор роли
+    name VARCHAR(50) NOT NULL           -- Наименование роли
+);
+
+/* Заполнение таблицы ROLE */
+INSERT INTO role (name)
+VALUES ('user'), ('moderator'), ('administrator');
+
+/* Удаление таблицы USER_COMMUNITIES */
+DROP TABLE IF EXISTS users_communities;
+
+/* Создание таблицы USER_COMMUNITIES */
+CREATE TABLE users_communities (
+	id BIGSERIAL PRIMARY KEY,                       -- уникальный идентификатор принадлежности пользователя к группе
+    user_id INT NOT NULL,                           -- идентификатор пользователя, присоединенного к группе
+	community_id INT NOT NULL,                      -- идентификатор группы
+    role INT NOT NULL default 1,                    -- роль пользователя в группе
+    joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,  -- дата присоединения пользователя к группе
+    FOREIGN KEY (user_id) REFERENCES users(id) ON UPDATE CASCADE ON DELETE RESTRICT,
+    FOREIGN KEY (community_id) REFERENCES communities(id) ON UPDATE CASCADE ON DELETE RESTRICT,
+    FOREIGN KEY (role) REFERENCES role(id) ON UPDATE CASCADE ON DELETE RESTRICT
+);
+
+/* Заполнение таблицы USER_COMMUNITIES */
+INSERT INTO users_communities (user_id, community_id, role)
+VALUES
+    (1, 1, 3), (1, 2, 2), (1, 3, 1),
+    (2, 1, 1), (2, 2, 1),
+    (3, 1, 1), (3, 2, 2), (3, 10, 3), (3, 5, 1), (3, 8, 2),
+    (4, 1, 1), (4, 2, 2), (4, 3, 3), (4, 8, 1),
+    (5, 1, 1), (5, 2, 2), (5, 3, 3), (5, 6, 1), (5, 8, 2), (5, 10, 3),
+    (6, 1, 1), (6, 2, 2), (6, 3, 3), (6, 6, 1),
+    (7, 1, 1), (7, 2, 2), (7, 3, 3), (7, 8, 1), (7, 7, 2), (7, 6, 3),
+    (8, 1, 1), (8, 2, 1), (8, 3, 2), (8, 5, 2), (8, 7, 3), (8, 9, 3),
+    (9, 1, 2), (9, 2, 3),
+    (10, 1, 2), (10, 10, 1);
 
 /* Проверяем, что создалась наша база данных */
 SELECT datname FROM pg_database
 WHERE datname='socialnet';
+
+/* Строим словарь данных базы данных SOCIALNET */
+SELECT
+    c.relname as "Таблица",
+    a.attnum as "№ п/п",
+    a.attname as "Поле",
+    pt.typname as "Тип",
+    CASE
+        WHEN a.atttypmod = -1
+            THEN NULL
+        ELSE a.atttypmod
+    END "Размер",
+    a.attnotnull as "NULL",
+    CASE
+        WHEN a.attnum IN(
+        SELECT UNNEST(cn.conkey)
+        FROM
+            pg_catalog.pg_constraint cn
+        WHERE
+            cn.conrelid = a.attrelid
+          AND cn.contype LIKE 'p')
+            THEN 'PK'
+    END as "Ключ"
+FROM
+  pg_catalog.pg_attribute a
+  JOIN pg_catalog.pg_type pt ON a.atttypid = pt.oid
+  JOIN pg_catalog.pg_class c ON a.attrelid = c.oid
+  JOIN pg_catalog.pg_namespace n ON c.relnamespace = n.oid
+  LEFT JOIN pg_catalog.pg_description ad ON ad.objoid = a.attrelid
+  AND ad.objsubid = a.attnum
+WHERE
+  a.attnum > 0
+  AND n.nspname = 'public'
+  and c.reltype <> 0
+ORDER BY
+  c.relname,
+  a.attnum;
 
 /* Найдите всех друзей пользователя с id = 1. */
 SELECT *
