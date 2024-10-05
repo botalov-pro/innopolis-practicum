@@ -454,3 +454,79 @@ ORDER BY
 ![](img/img_02.png)
 
 **Результат:** все таблицы базы данных SOCIALNET успешно созданы.
+
+Проверим заполнение таблиц:
+
+```postgresql
+/* Проверка заполнения таблицы USERS */
+SELECT * FROM users;
+```
+
+![](img/img_03.png)
+
+```postgresql
+/* Проверка заполнения таблицы MESSAGES */
+SELECT * FROM messages;
+```
+
+![](img/img_04.png)
+
+```postgresql
+/* Проверка заполнения таблицы STATUS */
+SELECT * FROM status;
+```
+
+![](img/img_05.png)
+
+```postgresql
+/* Проверка заполнения таблицы FRIEND_REQUESTS */
+SELECT * FROM friend_requests;
+```
+
+![](img/img_06.png)
+
+```postgresql
+/* Проверка заполнения таблицы COMMUNITIES */
+SELECT * FROM communities;
+```
+
+![](img/img_07.png)
+
+```postgresql
+/* Проверка заполнения таблицы ROLE */
+SELECT * FROM role;
+```
+
+![](img/img_08.png)
+
+```postgresql
+/* Проверка заполнения таблицы USERS_COMMUNITIES */
+SELECT * FROM users_communities;
+```
+
+![](img/img_09.png)
+
+**Результат:** все таблицы базы данных SOCIALNET успешно заполнены данными.
+
+### Задание 1.
+
+Найдите всех друзей пользователя с id = 1.
+
+```postgresql
+/* Найдите всех друзей пользователя с id = 1. */
+SELECT firstname || ' ' || lastname AS friends          -- id=1 (получатель запроса)
+    FROM friend_requests AS fr
+    LEFT JOIN status s on s.id = fr.status
+    LEFT JOIN users u on u.id = fr.initiator_user_id
+WHERE s.name = 'approved' AND target_user_id = 1
+UNION                                                   -- соединяем таблицы
+SELECT firstname || ' ' || lastname  AS friends         -- id=1 (отправитель запроса)
+FROM friend_requests AS fr
+    LEFT JOIN status s on s.id = fr.status
+    LEFT JOIN users u on u.id = fr.target_user_id
+WHERE s.name = 'approved' AND initiator_user_id = 1;
+```
+
+![](img/img_10.png)
+
+**Результат:** у пользователя с id = 1 всего 3 друзей: Jordyn Jerde, Norene West и Unique Windler.

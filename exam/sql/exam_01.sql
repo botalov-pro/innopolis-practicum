@@ -230,10 +230,39 @@ ORDER BY
   c.relname,
   a.attnum;
 
+/* Проверка заполнения таблицы USERS */
+SELECT * FROM users;
+
+/* Проверка заполнения таблицы MESSAGES */
+SELECT * FROM messages;
+
+/* Проверка заполнения таблицы STATUS */
+SELECT * FROM status;
+
+/* Проверка заполнения таблицы FRIEND_REQUESTS */
+SELECT * FROM friend_requests;
+
+/* Проверка заполнения таблицы COMMUNITIES */
+SELECT * FROM communities;
+
+/* Проверка заполнения таблицы ROLE */
+SELECT * FROM role;
+
+/* Проверка заполнения таблицы USERS_COMMUNITIES */
+SELECT * FROM users_communities;
+
 /* Найдите всех друзей пользователя с id = 1. */
-SELECT *
-FROM friend_requests
-WHERE status = 'approved' AND target_user_id = 1;
+SELECT firstname || ' ' || lastname AS friends          -- id=1 (получатель запроса)
+    FROM friend_requests AS fr
+    LEFT JOIN status s on s.id = fr.status
+    LEFT JOIN users u on u.id = fr.initiator_user_id
+WHERE s.name = 'approved' AND target_user_id = 1
+UNION                                                   -- соединяем таблицы
+SELECT firstname || ' ' || lastname  AS friends         -- id=1 (отправитель запроса)
+FROM friend_requests AS fr
+    LEFT JOIN status s on s.id = fr.status
+    LEFT JOIN users u on u.id = fr.target_user_id
+WHERE s.name = 'approved' AND initiator_user_id = 1;
 
 /* Найдите все сообщения, в которых принимал участие пользователь id = 1. */
 SELECT *
