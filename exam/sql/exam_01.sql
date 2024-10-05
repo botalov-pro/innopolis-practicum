@@ -265,11 +265,19 @@ FROM friend_requests AS fr
 WHERE s.name = 'approved' AND initiator_user_id = 1;
 
 /* Найдите все сообщения, в которых принимал участие пользователь id = 1. */
-SELECT *
+SELECT id, body, created_at
 FROM messages
-WHERE from_user_id = 1;
+WHERE from_user_id = 1 OR to_user_id = 1;
 
 /* Найдите всех пользователей, кто состоит в сообществе 'beatae’. */
-SELECT *
-FROM communities
-WHERE name = 'beatae';
+SELECT u.firstname || ' ' || u.lastname AS Members
+FROM users_communities AS uc
+LEFT JOIN communities c on c.id = uc.community_id
+LEFT JOIN users u on u.id = uc.user_id
+WHERE LOWER(c.name) = 'beatae';
+
+/* Найдите всех пользователей, кто отправлял сообщение содержащее слово 'culpa'. */
+SELECT u.firstname || ' ' || u.lastname AS Users
+FROM messages
+left join users u on u.id = messages.from_user_id
+WHERE LOWER(body) LIKE '%culpa%';

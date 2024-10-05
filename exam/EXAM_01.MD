@@ -530,3 +530,51 @@ WHERE s.name = 'approved' AND initiator_user_id = 1;
 ![](img/img_10.png)
 
 **Результат:** у пользователя с id = 1 всего 3 друзей: Jordyn Jerde, Norene West и Unique Windler.
+
+### Задание 2.
+
+Найдите все сообщения, в которых принимал участие пользователь id = 1.
+
+```postgresql
+/* Найдите все сообщения, в которых принимал участие пользователь id = 1. */
+SELECT id, body, created_at
+FROM messages
+WHERE from_user_id = 1 OR to_user_id = 1;
+```
+
+![](img/img_11.png)
+
+**Результат:** пользователь с id = 1 принимал участие как получатель или отправитель в 17 сообщениях.
+
+### Задание 3.
+
+Найдите всех пользователей, кто состоит в сообществе 'beatae’.
+
+```postgresql
+/* Найдите всех пользователей, кто состоит в сообществе 'beatae’. */
+SELECT u.firstname || ' ' || u.lastname AS Members
+FROM users_communities AS uc
+LEFT JOIN communities c on c.id = uc.community_id
+LEFT JOIN users u on u.id = uc.user_id
+WHERE LOWER(c.name) = 'beatae';
+```
+
+![](img/img_12.png)
+
+**Результат:** в сообществе **'beatae’** состоит 9 участников: Reuben Nienow, Frederik Upton, Unique Windler, Norene West, Frederick Effertz, Victoria Medhurst, Austyn Braun, Jaida Kilback, Mireya Orn.
+
+### Задание 4.
+
+Найдите всех пользователей, кто отправлял сообщение содержащее слово 'culpa'.
+
+```postgresql
+/* Найдите всех пользователей, кто отправлял сообщение содержащее слово 'culpa'. */
+SELECT u.firstname || ' ' || u.lastname AS Users
+FROM messages
+left join users u on u.id = messages.from_user_id
+WHERE LOWER(body) LIKE '%culpa%';
+```
+
+![](img/img_13.png)
+
+**Результат:** Пользователи Reuben Nienow и Norene West отправляли сообщения, содержащие слово 'culpa'. 
