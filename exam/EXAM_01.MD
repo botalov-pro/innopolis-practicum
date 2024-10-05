@@ -577,4 +577,22 @@ WHERE LOWER(body) LIKE '%culpa%';
 
 ![](img/img_13.png)
 
-**Результат:** Пользователи Reuben Nienow и Norene West отправляли сообщения, содержащие слово 'culpa'. 
+**Результат:** Пользователи Reuben Nienow и Norene West отправляли сообщения, содержащие слово 'culpa'.
+
+### Задание 5.
+
+Найдите друзей друзей пользователя с id = 1.
+
+```postgresql
+/* Найдите друзей друзей пользователя с id = 1. */
+SELECT DISTINCT u.firstname || ' ' || u.lastname AS "Friends of friends"    -- выбираем уникальные значения и собираем имя пользователя
+FROM friend_requests AS fr1
+JOIN friend_requests AS fr2 ON fr1.target_user_id = fr2.initiator_user_id   -- присоединяем таблицу саму к себе
+JOIN users AS u ON fr2.target_user_id = u.id                                -- присоединяем таблицу с инфо о пользователях
+WHERE fr1.initiator_user_id = 1
+    AND fr2.target_user_id != 1;                                            -- исключаем самого id = 1
+```
+
+![](img/img_14.png)
+
+**Результат:** друг друзей пользователя с id = 1 всего один - Victoria Medhurst.

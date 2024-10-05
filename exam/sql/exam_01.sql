@@ -281,3 +281,11 @@ SELECT u.firstname || ' ' || u.lastname AS Users
 FROM messages
 left join users u on u.id = messages.from_user_id
 WHERE LOWER(body) LIKE '%culpa%';
+
+/* Найдите друзей друзей пользователя с id = 1. */
+SELECT DISTINCT u.firstname || ' ' || u.lastname AS "Friends of friends"    -- выбираем уникальные значения и собираем имя пользователя
+FROM friend_requests AS fr1
+JOIN friend_requests AS fr2 ON fr1.target_user_id = fr2.initiator_user_id   -- присоединяем таблицу саму к себе
+JOIN users AS u ON fr2.target_user_id = u.id                                -- присоединяем таблицу с инфо о пользователях
+WHERE fr1.initiator_user_id = 1
+    AND fr2.target_user_id != 1;                                            -- исключаем самого id = 1
