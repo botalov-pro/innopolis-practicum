@@ -96,11 +96,81 @@ FROM workers w
 JOIN departments d ON w.dept_id = d.d_id
 GROUP BY ROLLUP (d.name_dept);  -- Группируем по отделам и выводим информацию по всей компании (ROLLUP)
 
+/* Задача 4.
+   Найти количество сотрудников во всех возможных комбинациях отдел - должность.
 
--- найти количество сотрудников во всех возможных комбинациях отдел - должность
+   Вариант 1. Без использования оператора CUBE
+*/
+SELECT
+    d.name_dept AS department,
+    j.name_job AS job,
+    COUNT(w.w_id) AS employee_count
+FROM
+    departments AS d
+CROSS JOIN
+    jobs AS j
+LEFT JOIN
+    workers AS w ON d.d_id = w.dept_id AND j.j_id = w.job_id
+GROUP BY
+    d.name_dept, j.name_job
+ORDER BY
+    d.name_dept, j.name_job;
 
+/* Задача 4.
+   Найти количество сотрудников во всех возможных комбинациях отдел - должность.
 
--- для каждой должности соберите имена сотрудников как массив
+   Вариант 2. С использованием оператора CUBE
+*/
+SELECT
+    d.name_dept AS department,
+    j.name_job AS job,
+    COUNT(w.w_id) AS employee_count
+FROM
+    workers AS w
+JOIN
+    departments AS d ON w.dept_id = d.d_id
+JOIN
+    jobs AS j ON w.job_id = j.j_id
+GROUP BY
+    CUBE (d.name_dept, j.name_job)
+ORDER BY
+    d.name_dept, j.name_job;
+
+/* Задача 4.
+   Найти количество сотрудников во всех возможных комбинациях отдел - должность.
+
+   Вариант 3. С использованием оператора ROLLUP.
+*/
+
+SELECT
+    d.name_dept AS department,
+    j.name_job AS job,
+    COUNT(w.w_id) AS employee_count
+FROM
+    workers AS w
+JOIN
+    departments AS d ON w.dept_id = d.d_id
+JOIN
+    jobs AS j ON w.job_id = j.j_id
+GROUP BY
+    ROLLUP(d.name_dept, j.name_job)
+ORDER BY
+    d.name_dept, j.name_job;
+
+/* Задача 5.
+   Для каждой должности соберите имена сотрудников как массив.
+*/
+SELECT
+    j.name_job AS job,
+    ARRAY_AGG(w.name_worker) AS workers_names
+FROM
+    workers AS w
+JOIN
+    jobs AS j ON w.job_id = j.j_id
+GROUP BY
+    j.name_job
+ORDER BY
+    j.name_job;
 
 
 -- создайте итоги по отделу и должности по средней зарплате (ROLLUP используем)
