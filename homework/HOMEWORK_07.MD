@@ -19,6 +19,8 @@
 
 ## Выполнение задания
 
+Переносим код из исходного файла [HW_task_7.sql](https://github.com/botalov-pro/innopolis-practicum/blob/main/homework/src/HW_task_7.sql) в рабочий файл [homework_07.sql](https://github.com/botalov-pro/innopolis-practicum/blob/main/homework/sql/homework_07.sql) и далее задачи выполняем в нём. 
+
 ### Задача 1.
 
 Найти среднюю зарплату всех кто родился после 01.01.1990
