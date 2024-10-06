@@ -2,13 +2,13 @@
 
 Исполнитель: Боталов Константин Владимирович
 
-* [Ссылка на настоящий файл]()
-* [Ссылка на финальный SQL-файл]()
+* [Ссылка на настоящий файл](https://github.com/botalov-pro/innopolis-practicum/blob/main/homework/HOMEWORK_07.MD)
+* [Ссылка на финальный SQL-файл](https://github.com/botalov-pro/innopolis-practicum/blob/main/homework/sql/homework_07.sql)
 
 
 ## Постановка задания
 
-1. Подгружаем в БД файл HW_task_7.sql
+1. Подгружаем в БД файл [HW_task_7.sql](https://github.com/botalov-pro/innopolis-practicum/blob/main/homework/src/HW_task_7.sql).
 2. Найти среднюю зарплату всех кто родился после 01.01.1990
 3. Найти средний возраст (по полным годам) всех по отделам с указанием наименований отделов
 4. Найти суммарную годовую зарплату по каждому отделу и итого по компании
