@@ -2,7 +2,7 @@
 
 <img src="extra/img/innopolis-logo.svg" height="48px" href="#"/>
 
-SQL course at Innopolis University, 2024.
+Repository for SQL course at Innopolis University, 2024.
 
 ## Homeworks
 
