@@ -172,14 +172,51 @@ GROUP BY
 ORDER BY
     j.name_job;
 
+/* Задача 6.
+   Создайте итоги по отделу и должности по средней зарплате (ROLLUP используем)
+*/
+SELECT
+    d.name_dept AS department,
+    j.name_job AS job,
+    ROUND(
+            AVG(w.salary), 2
+    ) AS average_salary -- вычисляем средние зарплаты и округляем до 2х знаков после запятой
+FROM
+    workers AS w
+JOIN
+    departments AS d ON w.dept_id = d.d_id
+JOIN
+    jobs AS j ON w.job_id = j.j_id
+GROUP BY
+    ROLLUP (d.name_dept, j.name_job)    -- группируем с оператором ROLLUP
+ORDER BY
+    d.name_dept, j.name_job;
 
--- создайте итоги по отделу и должности по средней зарплате (ROLLUP используем)
+/* Задача 7.
+   Найдите в одном запросе отдел, где моложе всего сотрудники в среднем, и посчитайте для него среднюю заработную плату, то есть должно быть три столбца - имя отдела, средний возраст там, средняя зарплата там
+*/
+WITH age_salary AS (    -- получаем таблицу вида: отдел, средний возраст, средняя зарплата
+    SELECT
+        d.name_dept AS department,  -- название отдела
+        AVG(EXTRACT(YEAR FROM age(w.birthday))) AS avg_age, -- средний возраст по отделам
+        ROUND(AVG(w.salary), 2) AS avg_salary   -- средняя заработная плата в отделе
+    FROM
+        workers AS w
+    JOIN
+        departments AS d ON w.dept_id = d.d_id
+    GROUP BY
+        d.name_dept
+)
+SELECT
+    department,
+    avg_age,
+    avg_salary
+FROM
+    age_salary
+ORDER BY
+    avg_age ASC -- сортируем по среднему возрасту
+LIMIT 1;    -- оставляем только 1 самое маленькое значение (самый "молодой" отдел)
 
-
-
--- найдите в одном запросе отдел, где моложе всего сотрудники в среднем,
--- и посчитайте для него среднюю заработную плату
--- то есть должно быть три столбца - имя отдела, средний возраст там, средняя зарплата там
 
 
 
