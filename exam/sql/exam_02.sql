@@ -4,6 +4,10 @@ DROP DATABASE IF EXISTS innopolis;
 /* Создание базы данных INNOPOLIS */
 CREATE DATABASE innopolis;
 
+/* Проверяем, что создалась наша база данных */
+SELECT datname FROM pg_database
+WHERE datname='innopolis';
+
 /*
    Задание 1.
    Через анонимный блок реализовать проверку целого числа на четность,
