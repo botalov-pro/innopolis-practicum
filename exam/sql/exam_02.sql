@@ -59,13 +59,13 @@ BEGIN
         is_simple := FALSE; -- Число непростое, т.к. меньше 2
     ELSE
         /*
-            Проверка на делимость:
+            Проверка на делимость от 2 до floor(sqrt(number)):
             sqrt - квадратный корень, floor - округление до ближайшего целого
-         */
+        */
         FOR i IN 2..floor(sqrt(number)) LOOP --
             IF number % i = 0 THEN
-                is_simple := FALSE; -- Если число делится на i, оно не простое
-                EXIT; -- Выходим из цикла, так как число не простое
+                is_simple := FALSE; -- Если число делится на i, то НЕ простое
+                EXIT;
             END IF;
         END LOOP;
     END IF;
@@ -75,4 +75,43 @@ BEGIN
     ELSE
         RAISE NOTICE 'Число % НЕ является простым', number;
     END IF;
+END $$;
+
+/*
+   Задание 4.
+   Через анонимный блок посчитать сколько всего есть простых чисел в некотором промежутке чисел,
+   левая граница и правая граница диапазона должны быть как переменные
+*/
+DO $$
+DECLARE
+    min_range INT := 1;  -- Левая граница диапазона
+    max_range INT := 1000;  -- Правая граница диапазона
+    simple_count INT := 0;  -- Счетчик простых чисел
+    number INT;  -- Счетчик текущего числа
+    is_simple BOOLEAN;  -- Логическая переменная, которая будет изменяться при проверке числа.
+BEGIN
+    FOR number IN min_range..max_range LOOP
+        IF number < 2 THEN
+            CONTINUE;  -- Число непростое, т.к. меньше 2
+        END IF;
+
+        is_simple := TRUE;  -- Предположим, что number - простое
+
+        /*
+            Проверка на делимость от 2 до floor(sqrt(number)):
+            sqrt - квадратный корень, floor - округление до ближайшего целого
+        */
+        FOR i IN 2..floor(sqrt(number)) LOOP
+            IF number % i = 0 THEN
+                is_simple := FALSE;  -- Если делится, то НЕ простое
+                EXIT;
+            END IF;
+        END LOOP;
+
+        IF is_simple THEN
+            simple_count := simple_count + 1;  -- Увеличиваем счетчик простых чисел
+        END IF;
+    END LOOP;
+
+    RAISE NOTICE 'В промежутке от % до % всего % простых чисел', min_range, max_range, simple_count;
 END $$;
