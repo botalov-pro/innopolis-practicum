@@ -43,3 +43,36 @@ BEGIN
 
     RAISE NOTICE 'В промежутке от % до % всего % нечетных чисел и % четных', min_range, max_range, odd_count, even_count;
 END $$;
+
+/*
+   Задание 3.
+   Через анонимный блок определить является ли число простым или нет,
+   число должно быть как переменная
+*/
+DO $$
+DECLARE
+    number INTEGER := 1; -- Здесь можно задать любое целое число, которое нужно проверить
+    is_simple BOOLEAN := TRUE; -- Логическая переменная, которая будет изменяться при проверке числа.
+    i INTEGER; -- счётчик итераций
+BEGIN
+    IF number < 2 THEN
+        is_simple := FALSE; -- Число непростое, т.к. меньше 2
+    ELSE
+        /*
+            Проверка на делимость:
+            sqrt - квадратный корень, floor - округление до ближайшего целого
+         */
+        FOR i IN 2..floor(sqrt(number)) LOOP --
+            IF number % i = 0 THEN
+                is_simple := FALSE; -- Если число делится на i, оно не простое
+                EXIT; -- Выходим из цикла, так как число не простое
+            END IF;
+        END LOOP;
+    END IF;
+
+    IF is_simple THEN
+        RAISE NOTICE 'Число % является простым', number;
+    ELSE
+        RAISE NOTICE 'Число % НЕ является простым', number;
+    END IF;
+END $$;
