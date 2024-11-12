@@ -1,6 +1,6 @@
 # ПРОМЕЖУТОЧНАЯ АТТЕСТАЦИЯ 2
 
-<img src="extra/img/innopolis-logo.svg" height="48px" href="#"/>
+<img src="../extra/img/innopolis-logo.svg" height="48px" href="#"/>
 
 Исполнитель: Боталов Константин Владимирович
 
