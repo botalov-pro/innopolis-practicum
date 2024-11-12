@@ -1,5 +1,7 @@
 # ПРОМЕЖУТОЧНАЯ АТТЕСТАЦИЯ 1
 
+<img src="../extra/img/innopolis-logo.svg" height="48px" href="#"/>
+
 Исполнитель: Боталов Константин Владимирович
 
 * [Ссылка](https://github.com/botalov-pro/innopolis-practicum/blob/main/exam/EXAM_01.MD) на настоящую работу.
