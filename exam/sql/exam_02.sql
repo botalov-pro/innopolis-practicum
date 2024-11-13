@@ -184,35 +184,31 @@ BEGIN
 
         /* Считаем количество друзей для текущего пользователя */
         SELECT COUNT(*) INTO friends_count
-        FROM (
-            SELECT
-                CASE
-                    WHEN fr.target_user_id = user_record.id THEN fr.initiator_user_id
-                    ELSE fr.target_user_id
-                END AS friend_id
-            FROM friend_requests AS fr
-            LEFT JOIN status s ON s.id = fr.status
-            WHERE s.name = 'approved' AND (fr.target_user_id = user_record.id OR fr.initiator_user_id = user_record.id)
-        ) AS friends;
+        FROM friend_requests AS fr
+        LEFT JOIN status s ON s.id = fr.status
+        WHERE s.name = 'approved' AND (target_user_id = user_record.id OR initiator_user_id = user_record.id);
 
         /* Проверяем наличие друзей для текущего пользователя */
         IF friends_count > 0 THEN
             friends_list := '';
 
             /* Получаем список друзей текущего пользователя */
-            SELECT firstname || ' ' || lastname INTO friends_list
-                FROM friend_requests AS fr
-                LEFT JOIN status s on s.id = fr.status
-                LEFT JOIN users u on u.id = fr.initiator_user_id
-            WHERE s.name = 'approved' AND target_user_id = user_record.id
-            UNION                                                   -- соединяем таблицы
-            SELECT firstname || ' ' || lastname
-            FROM friend_requests AS fr
-                LEFT JOIN status s on s.id = fr.status
-                LEFT JOIN users u on u.id = fr.target_user_id
-            WHERE s.name = 'approved' AND initiator_user_id = user_record.id;
+            SELECT * INTO friends_list
+                FROM (
+                        SELECT STRING_AGG(firstname || ' ' || lastname, ', ')
+                            FROM friend_requests AS fr
+                            LEFT JOIN status s on s.id = fr.status
+                            LEFT JOIN users u on u.id = fr.initiator_user_id
+                            WHERE s.name = 'approved' AND target_user_id = user_record.id
+                        UNION
+                        SELECT STRING_AGG(firstname || ' ' || lastname, ', ')
+                            FROM friend_requests AS fr
+                            LEFT JOIN status s on s.id = fr.status
+                            LEFT JOIN users u on u.id = fr.target_user_id
+                            WHERE s.name = 'approved' AND initiator_user_id = user_record.id
+                     ) AS friends;
 
-            RAISE NOTICE 'У пользователя % % друзья следующие %: %', user_record.firstname, user_record.lastname, friends_count, friends_list;
+            RAISE NOTICE 'У пользователя % % друзья следующие: %', user_record.firstname, user_record.lastname, friends_list;
         ELSE
             RAISE NOTICE 'У пользователя % % друзей неть (', user_record.firstname, user_record.lastname;
         END IF;

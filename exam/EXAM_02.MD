@@ -285,6 +285,65 @@ END $$;
 
 ### Задание 8.
 
+Вывести информацию про друзей каждого пользователя из БД социальной сети.
+
+[Код базы данных](https://github.com/botalov-pro/innopolis-practicum/blob/main/exam/sql/exam_01.sql) социальной сети из промежуточной аттестации 1:
+
+```postgresql
+/*
+   Задание 7.
+   Вывести информацию про друзей каждого пользователя из БД социальной сети.
+
+   Код базы данных социальной сети из промежуточной аттестации 1:
+   https://github.com/botalov-pro/innopolis-practicum/blob/main/exam/sql/exam_01.sql
+*/
+DO $$
+DECLARE
+    user_record RECORD;
+    friends_count INT;
+    friends_list TEXT;
+BEGIN
+    FOR user_record IN SELECT id, firstname, lastname FROM users LOOP
+
+        /* Считаем количество друзей для текущего пользователя */
+        SELECT COUNT(*) INTO friends_count
+        FROM friend_requests AS fr
+        LEFT JOIN status s ON s.id = fr.status
+        WHERE s.name = 'approved' AND (target_user_id = user_record.id OR initiator_user_id = user_record.id);
+
+        /* Проверяем наличие друзей для текущего пользователя */
+        IF friends_count > 0 THEN
+            friends_list := '';
+
+            /* Получаем список друзей текущего пользователя */
+            SELECT * INTO friends_list
+                FROM (
+                        SELECT STRING_AGG(firstname || ' ' || lastname, ', ')
+                            FROM friend_requests AS fr
+                            LEFT JOIN status s on s.id = fr.status
+                            LEFT JOIN users u on u.id = fr.initiator_user_id
+                            WHERE s.name = 'approved' AND target_user_id = user_record.id
+                        UNION
+                        SELECT STRING_AGG(firstname || ' ' || lastname, ', ')
+                            FROM friend_requests AS fr
+                            LEFT JOIN status s on s.id = fr.status
+                            LEFT JOIN users u on u.id = fr.target_user_id
+                            WHERE s.name = 'approved' AND initiator_user_id = user_record.id
+                     ) AS friends;
+
+            RAISE NOTICE 'У пользователя % % друзья следующие: %', user_record.firstname, user_record.lastname, friends_list;
+        ELSE
+            RAISE NOTICE 'У пользователя % % друзей неть (', user_record.firstname, user_record.lastname;
+        END IF;
+    END LOOP;
+END $$;
+```
+![](img/img_37.png)
+
+**Результат:** выведена таблица друзей пользователей.
+
+### Задание 8.
+
 Усложненное необязательное. Вывести таблицу умножения от 1 до 10 примерно в таком же виде как на рисунке внизу.
 ![](img/img_15.png)
 
