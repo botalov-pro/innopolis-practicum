@@ -33,3 +33,37 @@ ALTER TABLE innopolis DROP COLUMN release_date;
     Переименуем временный столбец в исходное имя
  */
 ALTER TABLE innopolis RENAME COLUMN release_date_new TO release_date;
+
+/*
+ Поиск самого длинного названия игры
+ */
+SELECT title, LENGTH(title)
+FROM innopolis
+ORDER BY LENGTH(title) DESC
+LIMIT 10;
+
+/*
+ Поиск часто встречающихся слов в играх
+ */
+WITH word_list AS (
+    SELECT
+        unnest(string_to_array(lower(title), ' ')) AS word
+    FROM
+        innopolis
+)
+
+SELECT
+    word,
+    COUNT(*) AS occurrences
+FROM
+    word_list
+WHERE
+    word <> ''  -- Исключаем пустые слова
+    AND
+    LENGTH(word) > 3
+GROUP BY
+    word
+ORDER BY
+    occurrences DESC
+LIMIT 10;  -- Ограничиваем выборку наиболее частыми словами (например, 10)
+
