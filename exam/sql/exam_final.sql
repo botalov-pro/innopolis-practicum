@@ -22,6 +22,95 @@ SELECT *
         RANDOM()  -- Запускаем механизм случайности...
     LIMIT 10;  -- ...и извлекаем 10 случайных строк.
 
+/* Вывод таблицы с количеством уникальных значений по каждому столбцу */
+DO $$
+DECLARE
+  cols TEXT;  -- Переменная для хранения агрегированного списка
+
+BEGIN
+
+    /*
+        Очищаем (удаляем) временную таблицу counter
+        перед ее заполнением
+     */
+    DROP TABLE IF EXISTS temp_counter;
+
+    cols := string_agg(  -- объединяем строки в одну строку с разделителем (запятая)
+                    'COUNT(DISTINCT ' || column_name::TEXT || ') '  || column_name::TEXT, ','
+            )
+    FROM (
+        /*  Подзапрос для получения всех имен колонок из таблицы SALES_IMPORT */
+        SELECT column_name
+            FROM information_schema.columns
+            WHERE
+                table_name = 'sales_import'
+            ) AS c;
+
+    /*
+       Создаем временную таблицу,
+       где в качестве столбцов будут строки
+       из переменной COLS (названия столбцов)
+     */
+    EXECUTE format(
+            'CREATE TEMP TABLE temp_counter AS SELECT %s FROM sales_import;',
+            cols
+            );
+
+END $$;
+
+SELECT * FROM temp_counter;  -- Вывод данных из временной таблицы
+
+/*
+    Подсчет количества NULL-значений по каждому столбцу
+*/
+DO $$
+DECLARE
+  cols TEXT;  -- Переменная для хранения агрегированного списка
+
+BEGIN
+
+    -- Удаляем временную таблицу, если она существует
+    DROP TABLE IF EXISTS temp_counter;
+
+    cols := string_agg(  -- Объединяем строки в одну строку с разделителем (запятая)
+
+                    /* Получаем разницу между общим количеством записей и ненулевыми значениями */
+                    'COUNT(*) - COUNT(' || column_name::TEXT || ') AS ' || column_name::TEXT, ','
+            )
+    FROM (
+        /* Подзапрос для получения всех имен колонок из таблицы sales_import */
+        SELECT column_name
+            FROM information_schema.columns
+            WHERE
+                table_name = 'sales_import'
+            ) AS c;
+
+    -- Создаем временную таблицу,
+    -- где в качестве столбцов будут строки из переменной COLS (названия столбцов с подсчетом NULL)
+    EXECUTE format(
+            'CREATE TEMP TABLE temp_counter AS SELECT %s FROM sales_import;',
+            cols
+            );
+
+END $$;
+
+SELECT * FROM temp_counter;  -- Вывод данных из временной таблицы
+
+/*
+    Очистка null-значений
+*/
+UPDATE sales_import
+SET
+    total_sales = COALESCE(total_sales, 0),
+    na_sales = COALESCE(na_sales, 0),
+    jp_sales = COALESCE(jp_sales, 0),
+    pal_sales = COALESCE(pal_sales, 0),
+    other_sales = COALESCE(other_sales, 0),
+    critic_score = COALESCE(critic_score, 0),
+    release_date = COALESCE(release_date, '1900-01-01'),
+    last_update = COALESCE(last_update, '1900-01-01'),
+    developer = COALESCE(developer, '--UNKNOWN--');
+
 
 /*
     Приведение типов
