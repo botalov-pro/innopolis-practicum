@@ -111,6 +111,88 @@ SET
     last_update = COALESCE(last_update, '1900-01-01'),
     developer = COALESCE(developer, '--UNKNOWN--');
 
+/*
+    Определение длины полей для текстовых значений:
+    Максимальная длина поля * 1.5
+*/
+SELECT
+    ROUND(MAX(LENGTH(title)) * 1.5) AS max_title_length,
+	ROUND(MAX(LENGTH(img)) * 1.5) AS max_img_length,
+	ROUND(MAX(LENGTH(console)) * 1.5) AS max_console_length,
+    ROUND(MAX(LENGTH(genre)) * 1.5) AS max_genre_length,
+    ROUND(MAX(LENGTH(publisher)) * 1.5) AS max_publisher_length,
+    ROUND(MAX(LENGTH(developer)) * 1.5) AS max_developer_length
+FROM sales_import;
+
+/* Удаление таблиц справочников */
+DROP TABLE IF EXISTS consoles;  -- Удаление таблицы сущности 'consoles' (Консоли)
+DROP TABLE IF EXISTS genres;  -- Удаление таблицы сущности 'genres' (Жанры)
+DROP TABLE IF EXISTS publishers;  -- Удаление таблицы сущности 'publishers' (Издатели)
+DROP TABLE IF EXISTS developers;  -- Удаление таблицы сущности 'developers' (Разработчики)
+
+/* Создание таблицы для сущности 'consoles' (Консоли) */
+CREATE TABLE consoles (
+    id SMALLSERIAL PRIMARY KEY,     -- Уникальный идентификатор консоли
+    name VARCHAR(255) NOT NULL      -- Название консоли
+);
+
+/* Создание таблицы для сущности 'genres' (Жанры) */
+CREATE TABLE genres (
+    id SMALLSERIAL PRIMARY KEY,     -- Уникальный идентификатор жанра
+    name VARCHAR(255) NOT NULL      -- Название жанра
+);
+
+/* Создание таблицы для сущности 'publishers' (Издатели) */
+CREATE TABLE publishers (
+    id SMALLSERIAL PRIMARY KEY,     -- Уникальный идентификатор издателя
+    name VARCHAR(255) NOT NULL      -- Название издателя
+);
+
+/* Создание таблицы для сущности 'developers' (Разработчики) */
+CREATE TABLE developers (
+    id SMALLSERIAL PRIMARY KEY,     -- Уникальный идентификатор разработчика
+    name VARCHAR(255) NOT NULL      -- Название разработчика
+);
+
+/*
+    Заполнение таблицы-справочника 'consoles' (Консоли)
+    и проверка заполнения таблицы
+*/
+INSERT INTO consoles(name)
+    SELECT DISTINCT console
+    FROM sales_import;
+
+SELECT * FROM consoles;
+
+/*
+    Заполнение таблицы-справочника 'genres' (Жанры)
+    и проверка заполнения таблицы
+*/
+INSERT INTO genres(name)
+    SELECT DISTINCT genre
+    FROM sales_import;
+
+SELECT * FROM genres;
+
+/*
+    Заполнение таблицы-справочника 'publishers' (Издатели)
+    и проверка заполнения таблицы
+*/
+INSERT INTO publishers(name)
+    SELECT DISTINCT publisher
+    FROM sales_import;
+
+SELECT * FROM publishers;
+
+/*
+    Заполнение таблицы-справочника 'developers' (Разработчики)
+    и проверка заполнения таблицы
+*/
+INSERT INTO developers(name)
+    SELECT DISTINCT developer
+    FROM sales_import;
+
+SELECT * FROM developers;
 
 /*
     Приведение типов
