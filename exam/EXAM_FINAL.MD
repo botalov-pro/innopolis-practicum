@@ -50,8 +50,7 @@
 - **Система управления базами данных:** PostgreSQL 17.0 / pgAdmin 4 v8.12 (на базе ОС Debian) 
 - **Языки программирования:** Python 3.12, SQL, PL/pgSQL
 - **Интерактивное веб-приложение:** Jupyter Server 2.14.2 / Jupiter Notebook 7.2.2
-- **Библиотека:** Pandas 2.2.3
-- **Библиотека:** SQLAlchemy 2.0.36
+- **Библиотеки:** Pandas 2.2.3, SQLAlchemy 2.0.36, psycopg 2.9.10
 
 [Полный список зависимостей проекта](../requirements.txt)
 
