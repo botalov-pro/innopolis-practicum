@@ -291,6 +291,39 @@ ORDER BY
   a.attnum;   -- ... и по номеру атрибута
 
 /*
+    Запрос на поиск значимых игр,
+    которые total_sales => 0.5 и critic_score > 0
+ */
+SELECT id, title, total_sales, critic_score
+	FROM games
+	WHERE
+		total_sales >= 0.5
+		AND
+		critic_score > 0
+	ORDER BY
+		total_sales ASC,
+		critic_score ASC;
+
+/*
+    Удаление малозначимых игр,
+    у которых total_sales < 0.5 и critic_score <= 0
+ */
+DELETE FROM games
+WHERE
+    total_sales < 0.5 OR
+    critic_score <= 0;
+
+/*
+    Вычисление качества набора данных
+    Сколько процентов записей от первоначального количества (64016) осталось
+*/
+SELECT
+    ROUND((COUNT(title)::DECIMAL / 64016) * 100, 2) || '%' AS quality_db
+FROM
+    games;
+
+
+/*
     Приведение типов
     Создаем временный столбец для хранения преобразованных данных
  */
