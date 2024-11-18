@@ -842,6 +842,117 @@ FROM
 
 **Результат:** от первоначального количества (64016 записей) осталось 2,37% записей, что говорит о слабом качестве набора данных.
 
+### Задание 8: Выбор временного интервала для исследования
+
+Определим глобальные продажи игр за каждый год, чтобы выбрать оптимальный период для исследования:
+
+```postgresql
+/*
+    Распределение глобальных продаж игр по времени
+*/
+SELECT
+    EXTRACT(YEAR FROM release_date) AS year,
+    SUM(total_sales) AS total_sales
+    FROM
+        games
+    GROUP BY
+        year
+    ORDER BY
+        year ASC;
+```
+
+![](img/img_72.png)
+
+Средствами pAdmin построим график распределения глобальных продаж по годам для лучшей визуализации:
+
+![](img/img_73.png)
+
+**Результат:** данные представлены на временном отрезке с 1989 года по 2018 год. Интерес для нас может представлять временной отрезов с 2004 по 2018 год, что соответствует данным за 20 лет. 
+
+### Задание 9: Вывод ТОП-100 игр по количеству проданных экземпляров
+
+Найдем ТОП-100 игр по количеству проданных экземпляров и покажем в виде представления:
+
+```postgresql
+/*
+    Создание представления (view) "ТОП-100 игр" по количеству продаж
+*/
+DROP VIEW IF EXISTS top_100_games_by_sales;  -- Удаление представления (если существует)
+
+CREATE VIEW top_100_games_by_sales AS  -- Создание представление
+SELECT
+	g.title,
+	c.name AS console,
+	j.name AS genre,
+	p.name AS publisher,
+	d.name AS developer,
+	SUM(g.total_sales) AS total_sales,
+	EXTRACT(YEAR FROM g.release_date) AS release_year
+FROM games g
+JOIN consoles c ON g.console_id = c.id
+JOIN genres j ON g.genre_id = j.id
+JOIN publishers p ON g.publisher_id = p.id
+JOIN developers d ON g.developer_id = d.id
+WHERE g.release_date >= NOW() - INTERVAL '20 years'
+GROUP BY g.title, c.name, j.name, p.name, d.name, g.release_date
+ORDER BY total_sales DESC
+LIMIT 100;
+
+SELECT * FROM top_100_games_by_sales;  -- Отображение представления
+```
+
+![](img/img_74.png)
+
+![](img/img_77.png)
+
+**Результат:** за выбранный 20-ти летний период самая популярная игра - это "Grand Theft Auto V" на платформе "PS3", которая была продана в количестве 20,32 млн. экземпляров.
+
+### Задание 10: Вывод ТОП-100 игр по оценке критиков
+
+Найдем какие игры выше всего оценены критиками в представлении ТОП-100 игр за выбранный временной период (20 лет):
+
+```postgresql
+/*
+    Создание представления (view) "ТОП-100 игр" по количеству оценок критиков (среднее значение)
+*/
+
+DROP VIEW IF EXISTS top_100_games_by_critics;  -- Удаление представления (если существует)
+
+CREATE VIEW top_100_games_by_critics AS  -- Создание представление
+SELECT
+	g.title,
+	c.name AS console,
+	j.name AS genre,
+	p.name AS publisher,
+	d.name AS developer,
+	ROUND(AVG(g.critic_score), 2) AS critic_score,
+	EXTRACT(YEAR FROM g.release_date) AS release_year
+FROM games g
+JOIN consoles c ON g.console_id = c.id
+JOIN genres j ON g.genre_id = j.id
+JOIN publishers p ON g.publisher_id = p.id
+JOIN developers d ON g.developer_id = d.id
+WHERE g.release_date >= NOW() - INTERVAL '20 years'
+GROUP BY g.title, c.name, j.name, p.name, d.name, g.release_date
+ORDER BY critic_score DESC
+LIMIT 100;
+
+SELECT * FROM top_100_games_by_critics;  -- Отображение представления
+```
+
+![](img/img_74.png)
+
+![](img/img_78.png)
+
+**Результат:** за выбранный 20-ти летний период самые популярные игры по оценкам критиков - это "Red Dead Redemption: Undead Nightmare" (на платформах X360 и PS3) и "Grand Theft Auto IV" (на платформах X360 и PS3) с максимальной оценкой 10.0 баллов.
+
+### Задание 11: Поиск пересечения полученных результатов
+
+Найдем пересечение полученных двух предыдуших результатов, отсортируем по общим продажам по убыванию,
+сохраним результат как материализованное представление:
+
+
+
 ## Выбор издателя и серии игр
 
 ## Основные выводы и рекомендации

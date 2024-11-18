@@ -322,6 +322,75 @@ SELECT
 FROM
     games;
 
+/*
+    Распределение глобальных продаж игр по времени
+*/
+SELECT
+    EXTRACT(YEAR FROM release_date) AS year,
+    SUM(total_sales) AS total_sales
+    FROM
+        games
+    GROUP BY
+        year
+    ORDER BY
+        year ASC;
+
+/*
+    Создание представления (view) "ТОП-100 игр" по количеству продаж
+*/
+DROP VIEW IF EXISTS top_100_games_by_sales;  -- Удаление представления (если существует)
+
+CREATE VIEW top_100_games_by_sales AS  -- Создание представление
+SELECT
+	g.title,
+	c.name AS console,
+	j.name AS genre,
+	p.name AS publisher,
+	d.name AS developer,
+	SUM(g.total_sales) AS total_sales,
+	EXTRACT(YEAR FROM g.release_date) AS release_year
+FROM games g
+JOIN consoles c ON g.console_id = c.id
+JOIN genres j ON g.genre_id = j.id
+JOIN publishers p ON g.publisher_id = p.id
+JOIN developers d ON g.developer_id = d.id
+WHERE g.release_date >= NOW() - INTERVAL '20 years'
+GROUP BY g.title, c.name, j.name, p.name, d.name, g.release_date
+ORDER BY total_sales DESC
+LIMIT 100;
+
+SELECT * FROM top_100_games_by_sales;  -- Отображение представления
+
+/*
+    Создание представления (view) "ТОП-100 игр" по количеству оценок критиков (среднее значение)
+*/
+
+DROP VIEW IF EXISTS top_100_games_by_critics;  -- Удаление представления (если существует)
+
+CREATE VIEW top_100_games_by_critics AS  -- Создание представление
+SELECT
+	g.title,
+	c.name AS console,
+	j.name AS genre,
+	p.name AS publisher,
+	d.name AS developer,
+	ROUND(AVG(g.critic_score), 2) AS total_sales,
+	EXTRACT(YEAR FROM g.release_date) AS release_year
+FROM games g
+JOIN consoles c ON g.console_id = c.id
+JOIN genres j ON g.genre_id = j.id
+JOIN publishers p ON g.publisher_id = p.id
+JOIN developers d ON g.developer_id = d.id
+WHERE g.release_date >= NOW() - INTERVAL '20 years'
+GROUP BY g.title, c.name, j.name, p.name, d.name, g.release_date
+ORDER BY critic_score DESC
+LIMIT 100;
+
+SELECT * FROM top_100_games_by_critics;  -- Отображение представления
+
+
+
+
 
 /*
     Приведение типов
