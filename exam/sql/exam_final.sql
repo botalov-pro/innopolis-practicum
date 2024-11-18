@@ -194,6 +194,102 @@ INSERT INTO developers(name)
 
 SELECT * FROM developers;
 
+/* Удаление таблицы для сущности 'games' (Игры) */
+DROP TABLE IF EXISTS games;
+
+/* Создание таблицы для сущности 'games' (Игры) */
+CREATE TABLE games (
+    id SERIAL PRIMARY KEY,                                  -- Уникальный идентификатор игры
+    title VARCHAR(255) NOT NULL,                            -- Название игры
+    img VARCHAR(255) DEFAULT NULL,                          -- Обложка игры
+    console_id INT NOT NULL REFERENCES consoles(id),        -- Идентификатор консоли (FK)
+    genre_id INT NOT NULL REFERENCES genres(id),            -- Идентификатор жанра (FK)
+    publisher_id INT NOT NULL REFERENCES publishers(id),    -- Идентификатор издателя (FK)
+    developer_id INT NOT NULL REFERENCES developers(id),    -- Идентификатор разработчика (FK)
+    release_date DATE DEFAULT '1900-01-01',                 -- Дата выхода игры                                                       |
+    critic_score DECIMAL(4, 2) DEFAULT 0,                   -- Оценка критиков (например, 8.75)
+    total_sales DECIMAL(10, 2) DEFAULT 0,                   -- Количество продаж во всем мире (в миллионах экземпляров)
+    na_sales DECIMAL(10, 2) DEFAULT 0,                      -- Количество продаж в Северной Америке (в миллионах экземпляров)
+    jp_sales DECIMAL(10, 2) DEFAULT 0,                      -- Количество продаж в Японии (в миллионах экземпляров)
+    pal_sales DECIMAL(10, 2) DEFAULT 0,                     -- Количество продаж в странах PAL (в миллионах экземпляров)
+    other_sales DECIMAL(10, 2) DEFAULT 0,                   -- Количество продаж в других регионах (в миллионах экземпляров)
+    last_update DATE DEFAULT '1900-01-01'                   -- Дата последнего обновления данных
+);
+
+/*
+    Заполнение и проверка заполнения таблицы 'games' (Игры)
+*/
+INSERT INTO games (
+                   title,
+                   img,
+                   console_id,
+                   genre_id,
+                   publisher_id,
+                   developer_id,
+                   release_date,
+                   critic_score,
+                   total_sales,
+                   na_sales,
+                   jp_sales,
+                   pal_sales,
+                   other_sales,
+                   last_update)
+SELECT
+    title,
+    img,
+    (SELECT id FROM consoles WHERE name = console) AS console_id,
+    (SELECT id FROM genres WHERE name = genre) AS genre_id,
+    (SELECT id FROM publishers WHERE name = publisher) AS publisher_id,
+    (SELECT id FROM developers WHERE name = developer) AS developer_id,
+    TO_DATE(release_date, 'YYYY-MM-DD'),
+    critic_score,
+    total_sales,
+    na_sales,
+    jp_sales,
+    pal_sales,
+    other_sales,
+    TO_DATE(last_update, 'YYYY-MM-DD')
+FROM sales_import;
+
+SELECT * FROM games;
+
+/* Строим словарь данных базы данных SALES */
+SELECT
+    c.relname as "Таблица",     -- Название таблицы
+    a.attnum as "№ п/п",        -- Номер столбца в таблице
+    a.attname as "Поле",        -- Название столбца
+    pt.typname as "Тип",        -- Тип данных для столбца
+    CASE                        -- Определяем размер поля
+        WHEN a.atttypmod = -1
+            THEN NULL
+        ELSE a.atttypmod
+    END "Размер",
+    a.attnotnull as "NULL",     -- Допускаются ли NULL-значения в поле
+    CASE                        -- Является ли поле первичным ключом (PK)
+        WHEN a.attnum IN(
+        SELECT UNNEST(cn.conkey)
+        FROM
+            pg_catalog.pg_constraint cn
+        WHERE
+            cn.conrelid = a.attrelid
+          AND cn.contype LIKE 'p')
+            THEN 'PK'
+    END as "Ключ"
+FROM
+  pg_catalog.pg_attribute a  -- Информация об атрибутах (полях) таблиц
+  JOIN pg_catalog.pg_type pt ON a.atttypid = pt.oid  -- Информация о типах данных
+  JOIN pg_catalog.pg_class c ON a.attrelid = c.oid  -- Информация о таблицах
+  JOIN pg_catalog.pg_namespace n ON c.relnamespace = n.oid  -- Информация о схемах
+  LEFT JOIN pg_catalog.pg_description ad ON ad.objoid = a.attrelid  -- Комментарии к объектам
+  AND ad.objsubid = a.attnum
+WHERE
+  a.attnum > 0  -- Убираем системные поля (нумерация атрибутов начинается с 1)
+  AND n.nspname = 'public'  -- Ограничиваем выборку только таблицами из схемы public
+  and c.reltype <> 0  -- Убираем не-пользовательские объекты из выборки
+ORDER BY
+  c.relname,  -- Сортируем результат по названию таблицы...
+  a.attnum;   -- ... и по номеру атрибута
+
 /*
     Приведение типов
     Создаем временный столбец для хранения преобразованных данных

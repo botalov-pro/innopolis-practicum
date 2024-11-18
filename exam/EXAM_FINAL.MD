@@ -53,7 +53,7 @@
 - **Интерактивное веб-приложение:** Jupyter Server 2.14.2 / Jupiter Notebook 7.2.2
 - **Библиотеки:** Pandas 2.2.3, SQLAlchemy 2.0.36, psycopg 2.9.10
 
-[Полный список зависимостей проекта](../requirements.txt)
+[Полный список зависимостей проекта](https://github.com/botalov-pro/innopolis-practicum/blob/main/requirements.txt)
 
 ## Описание исходных данных
 
@@ -487,7 +487,7 @@ SET
 
 ## Проектирование и создание целевой базы данных
 
-### Нормализация базы данных
+### Задание 5: Нормализация базы данных
 
 #### Определение сущностей
 
@@ -523,6 +523,7 @@ SET
 | **genre_id** (FK): идентификатор жанра игры                                              |
 | **publisher_id** (FK): идентификатор издателя игры                                       |
 | **developer_id** (FK): идентификатор разработчика игры                                   |
+| **release_date**: дата выхода игры                                                       |
 | **critic_score**: оценка критиков                                                        |
 | **total_sales**: количество продаж во всем мире (в миллионах экземпляров)                |
 | **na_sales**: количество продаж в Северной Америке (в миллионах экземпляров)             |
@@ -674,7 +675,133 @@ SELECT * FROM developers;
 
 ![](img/img_66.png)
 
-## Прогнозирование трендов
+**Результат:** мы создали таблицы справочников и заполнили их уникальными значениями из таблицы **SALES_IMPORT**. Теперь можем приступать к созданию и заполнению таблицы **GAMES**.
+
+#### Создание и наполнение таблицы игр
+
+Создадим таблицу для сущности 'games' (Игры):
+
+```postgresql
+/* Создание таблицы для сущности 'games' (Игры) */
+CREATE TABLE games (
+    id SERIAL PRIMARY KEY,                                  -- Уникальный идентификатор игры
+    title VARCHAR(255) NOT NULL,                            -- Название игры
+    img VARCHAR(255) DEFAULT NULL,                          -- Обложка игры
+    console_id INT NOT NULL REFERENCES consoles(id),        -- Идентификатор консоли (FK)
+    genre_id INT NOT NULL REFERENCES genres(id),            -- Идентификатор жанра (FK)
+    publisher_id INT NOT NULL REFERENCES publishers(id),    -- Идентификатор издателя (FK)
+    developer_id INT NOT NULL REFERENCES developers(id),    -- Идентификатор разработчика (FK)
+    release_date DATE DEFAULT '1900-01-01',                 -- Дата выхода игры                                                       |
+    critic_score DECIMAL(4, 2) DEFAULT 0,                   -- Оценка критиков (например, 8.75)
+    total_sales DECIMAL(10, 2) DEFAULT 0,                   -- Количество продаж во всем мире (в миллионах экземпляров)
+    na_sales DECIMAL(10, 2) DEFAULT 0,                      -- Количество продаж в Северной Америке (в миллионах экземпляров)
+    jp_sales DECIMAL(10, 2) DEFAULT 0,                      -- Количество продаж в Японии (в миллионах экземпляров)
+    pal_sales DECIMAL(10, 2) DEFAULT 0,                     -- Количество продаж в странах PAL (в миллионах экземпляров)
+    other_sales DECIMAL(10, 2) DEFAULT 0,                   -- Количество продаж в других регионах (в миллионах экземпляров)
+    last_update DATE DEFAULT '1900-01-01'                   -- Дата последнего обновления данных
+);
+```
+
+Заполним таблицу **GAMES** данными из таблицы **SALES_IMPORT** и проверим ее заполнение:
+
+```postgresql
+/*
+    Заполнение и проверка заполнения таблицы 'games' (Игры)
+*/
+INSERT INTO games (
+                   title,
+                   img,
+                   console_id,
+                   genre_id,
+                   publisher_id,
+                   developer_id,
+                   release_date,
+                   critic_score,
+                   total_sales,
+                   na_sales,
+                   jp_sales,
+                   pal_sales,
+                   other_sales,
+                   last_update)
+SELECT
+    title,
+    img,
+    (SELECT id FROM consoles WHERE name = console) AS console_id,
+    (SELECT id FROM genres WHERE name = genre) AS genre_id,
+    (SELECT id FROM publishers WHERE name = publisher) AS publisher_id,
+    (SELECT id FROM developers WHERE name = developer) AS developer_id,
+    TO_DATE(release_date, 'YYYY-MM-DD'),
+    critic_score,
+    total_sales,
+    na_sales,
+    jp_sales,
+    pal_sales,
+    other_sales,
+    TO_DATE(last_update, 'YYYY-MM-DD')
+FROM sales_import;
+
+SELECT * FROM games;
+```
+
+![](img/img_67.png)
+
+**Результат:** мы создали таблицу GAMES и заполнили ее данными из таблицы **SALES_IMPORT** в соответствии с правилами нормализации. Теперь можем приступать к выборке необходимых данных для достижения цели итогового проекта.
+
+#### Построение словаря данных для базы данных SALES
+
+Словарь данных — это систематизированная информация о структуре таблиц в базе данных, включая их поля и типы данных.
+
+Построим словарь данных для базы данных SALES, чтобы убедиться, что все сущности и атрибуты созданы:
+
+```postgresql
+/* Строим словарь данных базы данных SALES */
+SELECT
+    c.relname as "Таблица",     -- Название таблицы
+    a.attnum as "№ п/п",        -- Номер столбца в таблице
+    a.attname as "Поле",        -- Название столбца
+    pt.typname as "Тип",        -- Тип данных для столбца
+    CASE                        -- Определяем размер поля
+        WHEN a.atttypmod = -1
+            THEN NULL
+        ELSE a.atttypmod
+    END "Размер",
+    a.attnotnull as "NULL",     -- Допускаются ли NULL-значения в поле
+    CASE                        -- Является ли поле первичным ключом (PK)
+        WHEN a.attnum IN(
+        SELECT UNNEST(cn.conkey)
+        FROM
+            pg_catalog.pg_constraint cn
+        WHERE
+            cn.conrelid = a.attrelid
+          AND cn.contype LIKE 'p')
+            THEN 'PK'
+    END as "Ключ"
+FROM
+  pg_catalog.pg_attribute a  -- Информация об атрибутах (полях) таблиц
+  JOIN pg_catalog.pg_type pt ON a.atttypid = pt.oid  -- Информация о типах данных
+  JOIN pg_catalog.pg_class c ON a.attrelid = c.oid  -- Информация о таблицах
+  JOIN pg_catalog.pg_namespace n ON c.relnamespace = n.oid  -- Информация о схемах
+  LEFT JOIN pg_catalog.pg_description ad ON ad.objoid = a.attrelid  -- Комментарии к объектам
+  AND ad.objsubid = a.attnum
+WHERE
+  a.attnum > 0  -- Убираем системные поля (нумерация атрибутов начинается с 1)
+  AND n.nspname = 'public'  -- Ограничиваем выборку только таблицами из схемы public
+  and c.reltype <> 0  -- Убираем не-пользовательские объекты из выборки
+ORDER BY
+  c.relname,  -- Сортируем результат по названию таблицы...
+  a.attnum;   -- ... и по номеру атрибута
+```
+![](img/img_68.png)
+
+**Результат:** Словарь данных для базы данных SALES успешно построен. Все необходимые сущности, атрибуты и связи присутствуют. На основе этих данных построим логическую схему базы данных SALES. 
+
+### Задание 6: Создание логической диаграммы
+
+Исходя из созданных сущностей, связей и атрибутов сформируем инфологическую диаграмму основных сущностей по нотации Чана:
+
+![](img/EXAM_FINAL_DB_model.jpg)
+
+## Анализ перспектив
 
 ## Выбор издателя и серии игр
 
