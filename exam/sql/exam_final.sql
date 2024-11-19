@@ -388,149 +388,139 @@ LIMIT 100;
 
 SELECT * FROM top_100_games_by_critics;  -- Отображение представления
 
+/*
+    Создание материализованного представления по 2 представлениям
+*/
+-- Удаляем мат. представление, если существует
+DROP MATERIALIZED VIEW IF EXISTS top_100_games_join;
 
+-- Создаём мат. представление
+CREATE MATERIALIZED VIEW top_100_games_join AS
+SELECT
+    v1.title,
+    v1.console,
+	v1.genre,
+	v1.publisher,
+	v1.developer
+FROM
+    top_100_games_by_sales v1  -- Представление по количеству продаж
+INTERSECT
+SELECT
+    v2.title,
+    v2.console,
+	v2.genre,
+	v2.publisher,
+	v2.developer
+FROM
+    top_100_games_by_critics v2;  -- Представление по оценкам критиков
 
-
+-- Вывод мат. представления
+SELECT * FROM top_100_games_join;
 
 /*
-    Приведение типов
-    Создаем временный столбец для хранения преобразованных данных
- */
-ALTER TABLE innopolis ADD COLUMN release_date_new DATE;
+    Поиск популярной консоли
+*/
+SELECT
+	console,
+	COUNT(console) AS console_count
+	FROM
+		top_100_games_join
+	GROUP BY
+		console
+	ORDER BY console_count DESC;
 
 /*
-    Перенос данных
-    Скопируем данные из старого столбца в новый, преобразуя данные с помощью функции TO_DATE
- */
-UPDATE innopolis
-SET release_date_new = TO_DATE(release_date, 'YYYY-MM-DD')
-WHERE release_date IS NOT NULL;
+    Поиск самого успешного издателя
+*/
+SELECT
+	publisher,
+	COUNT(publisher) AS publisher_count
+	FROM
+		top_100_games_join
+	GROUP BY
+		publisher
+	ORDER BY publisher_count DESC;
 
 /*
-    Удаление старого столбца
-    Удаляем старый столбец
- */
-ALTER TABLE innopolis DROP COLUMN release_date;
+    Поиск популярного издателя по коэффициенту:
+    количество продаж / игра
+*/
+SELECT
+	p.name AS publisher,  -- наименование издателя
+	SUM(g.total_sales) AS total_sales,  -- кол-во продаж
+	COUNT(g.title) AS games_count,  -- кол-во игр
+	ROUND(AVG(g.critic_score), 2) AS critic_score_avg,  -- средняя оценка критиков
+	ROUND(SUM(g.total_sales) / COUNT(g.title), 2) AS rate  -- коэффициент ПРОДАЖИ / ИГРЫ
+	FROM games g
+	JOIN publishers p ON g.publisher_id = p.id
+	WHERE
+		release_date >= NOW() - INTERVAL '20 years'  -- интервал: 20 лет
+	GROUP BY
+		p.name
+	HAVING
+		COUNT(g.title) >= 20 -- не менее 20 игр
+	ORDER BY
+		rate DESC  -- сортируем по коэффициенту
+	LIMIT 10;  -- ТОП-10 издателей
 
 /*
-    Переименование нового столбца
-    Переименуем временный столбец в исходное имя
- */
-ALTER TABLE innopolis RENAME COLUMN release_date_new TO release_date;
-
--------
-
-/*
-    Приведение типов
-    Создаем временный столбец для хранения преобразованных данных
- */
-ALTER TABLE innopolis ADD COLUMN total_sales_new FLOAT;
-
-/*
-    Перенос данных
-    Скопируем данные из старого столбца в новый, преобразуя данные с помощью функции TO_DATE
- */
-UPDATE innopolis
-SET total_sales_new = total_sales
-WHERE total_sales IS NOT NULL;
-
-/*
-    Удаление старого столбца
-    Удаляем старый столбец
- */
-ALTER TABLE innopolis DROP COLUMN total_sales;
-
-/*
-    Переименование нового столбца
-    Переименуем временный столбец в исходное имя
- */
-ALTER TABLE innopolis RENAME COLUMN total_sales_new TO total_sales;
-
-ALTER TABLE innopolis
-ALTER COLUMN total_sales
-SET DATA TYPE float;
-
-
--------
-
-
-/*
- Поиск самого длинного названия игры
- */
-SELECT title, LENGTH(title)
-FROM innopolis
-ORDER BY LENGTH(title) DESC
-LIMIT 10;
+    Поиск популярного жанра игры: ТОП-10
+*/
+SELECT
+	j.name AS genre,
+	SUM(g.total_sales) AS total_sales
+	FROM games g
+	JOIN genres j ON g.genre_id = j.id
+	WHERE
+		release_date >= NOW() - INTERVAL '20 years'
+	GROUP BY
+		genre
+	ORDER BY
+		total_sales DESC
+	LIMIT 10;
 
 /*
  Поиск часто встречающихся слов в играх
  */
-WITH word_list AS (
-    SELECT
-        unnest(string_to_array(lower(title), ' ')) AS word
-    FROM
-        innopolis
-)
-
-SELECT
-    word,
-    COUNT(*) AS occurrences
-FROM
-    word_list
-WHERE
-    word <> ''  -- Исключаем пустые слова
-    AND
-    LENGTH(word) > 3
-GROUP BY
-    word
-ORDER BY
-    occurrences DESC
+WITH word_list AS (SELECT unnest(string_to_array(lower(title), ' ')) AS word
+                   FROM games)  -- строим массив слов из всех названий игр
+SELECT word,
+       COUNT(*) AS count
+FROM word_list
+WHERE word <> '' -- Исключаем пустые слова
+  AND LENGTH(word) > 3  -- длина слова: более 3 символов
+GROUP BY word
+ORDER BY count DESC
 LIMIT 10;  -- Ограничиваем выборку наиболее частыми словами (например, 10)
 
-/* Анализ временных данных */
-
-/* ABC-анализ */
-WITH revenue AS (
-    SELECT
-        title,
-        SUM(total_sales) AS total_revenue
-    FROM
-        innopolis
-    GROUP BY
-        title
-),
-ranked_revenue AS (
-    SELECT
-        title,
-        total_revenue,
-        SUM(total_revenue) OVER () AS grand_total,
-        SUM(total_revenue) OVER (ORDER BY total_revenue DESC) AS cumulative_revenue
-    FROM
-        revenue
-),
-abc_analysis AS (
-    SELECT
-        title,
-        total_revenue,
-        cumulative_revenue,
-        grand_total,
-        ROUND(cumulative_revenue / grand_total * 100, 2) AS cumulative_percentage
-    FROM
-        ranked_revenue
-)
-
+/*
+    Выбор рынка игры
+*/
 SELECT
-    title,
-    total_revenue,
-    cumulative_percentage,
-    CASE
-        WHEN cumulative_percentage <= 80 THEN 'A'
-        WHEN cumulative_percentage <= 95 THEN 'B'
-        ELSE 'C'
-    END AS category
-FROM
-    abc_analysis
-ORDER BY
-    cumulative_percentage;
+	SUM(na_sales) AS "North America",
+	SUM(jp_sales) AS Japan,
+	SUM(pal_sales) AS Europe,
+	SUM(other_sales) AS Other
+	FROM games;
 
-SELECT version();
+/*
+    Определение наиболее перспективной серии игр:
+    извлекаем первые слова из названия и считаем их встречаемость в названии
+*/
+SELECT
+    SUBSTRING(title FROM '^[^ ]+') AS first_word,   -- Извлекаем первое слово из названия
+    COUNT(*) AS game_count,                         -- Считаем количество игр
+    ARRAY_AGG(title) AS titles                      -- Собираем названия игр в массив
+FROM
+    top_100_games_join
+GROUP BY
+    first_word                                      -- Группируем по первому слову
+HAVING
+    COUNT(*) > 1                                    -- Отбираем группы, где более одной строки
+ORDER BY
+    game_count DESC, first_word;                    -- Сортируем по встречаемости игр и первому слову
+
+/*
+    Проверка количества серий игр
+*/
+SELECT title, console FROM top_100_games_join ORDER BY title;
