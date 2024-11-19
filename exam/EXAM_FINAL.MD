@@ -10,7 +10,7 @@
 Москва, 2024 г.
 
 * [Ссылка](https://github.com/botalov-pro/innopolis-practicum/blob/main/exam/EXAM_FINAL.MD) на настоящую работу.
-* [Ссылка](#) на презентацию проекта.
+* [Ссылка](https://github.com/botalov-pro/innopolis-practicum/blob/main/exam/pdf/EXAM_FINAL_PRESENTATION.pdf) на презентацию проекта.
 * [Ссылка](https://github.com/botalov-pro/innopolis-practicum/blob/main/exam/sql/exam_final.sql) на итоговый SQL-файл.
 * [Ссылка](https://github.com/botalov-pro/innopolis-practicum/blob/main/exam/py/Botalov_KV_Global_games_sales_Analysis.ipynb) на итоговый файл Jupiter Notebook.
 
