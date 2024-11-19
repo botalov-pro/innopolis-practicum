@@ -49,7 +49,7 @@
 - **Рабочая операционная система:** Windows 11 Home 23H2
 - **Среда контейнеризации приложений:** Docker Desktop 4.35.1
 - **Система управления базами данных:** PostgreSQL 17.0 / pgAdmin 4 v8.12 (на базе ОС Debian) 
-- **Языки программирования:** Python 3.12, SQL, PL/pgSQL
+- **Языки программирования:** Python 3.10, SQL, PL/pgSQL
 - **Интерактивное веб-приложение:** Jupyter Server 2.14.2 / Jupiter Notebook 7.2.2
 - **Библиотеки:** Pandas 2.2.3, SQLAlchemy 2.0.36, psycopg 2.9.10
 
