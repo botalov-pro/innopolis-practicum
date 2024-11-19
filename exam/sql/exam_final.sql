@@ -374,7 +374,7 @@ SELECT
 	j.name AS genre,
 	p.name AS publisher,
 	d.name AS developer,
-	ROUND(AVG(g.critic_score), 2) AS total_sales,
+	ROUND(AVG(g.critic_score), 2) AS critic_score,
 	EXTRACT(YEAR FROM g.release_date) AS release_year
 FROM games g
 JOIN consoles c ON g.console_id = c.id
