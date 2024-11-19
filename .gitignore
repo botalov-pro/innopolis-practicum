@@ -1,5 +1,7 @@
 .idea
-*.pdf
+EXAM_01.pdf
+EXAM_02.pdf
+EXAM_FINAL.pdf
 
 postgres_docker/pgdata
 postgres_docker/pgadmin
