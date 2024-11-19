@@ -524,3 +524,206 @@ ORDER BY
     Проверка количества серий игр
 */
 SELECT title, console FROM top_100_games_join ORDER BY title;
+
+/*
+    Создание таблицы для отслеживания изменений в таблице GAMES
+*/
+DROP TABLE IF EXISTS change_log_tbl_games;  -- Удаление таблицы (если существует)
+
+-- Создание таблицы
+CREATE TABLE change_log_tbl_games (
+    id SERIAL PRIMARY KEY,
+    game_id INT REFERENCES games(id) ON DELETE CASCADE,  -- Ссылка на таблицу игр с каскадным удалением
+
+    old_title VARCHAR(255),  -- Название игры
+    new_title VARCHAR(255),
+
+    old_console_id INT,  -- Идентификатор консоли (FK)
+    new_console_id INT,
+
+    old_genre_id INT,  -- Идентификатор жанра (FK)
+    new_genre_id INT,
+
+    old_publisher_id INT,  -- Идентификатор издателя (FK)
+    new_publisher_id INT,
+
+    old_developer_id INT,  -- Идентификатор разработчика (FK)
+    new_developer_id INT,
+
+    old_img VARCHAR(255),  -- Обложка игры
+    new_img VARCHAR(255),
+
+    old_release_date DATE,  -- Дата выхода игры
+    new_release_date DATE,
+
+    old_critic_score DECIMAL(4, 2),  -- Оценка критиков
+    new_critic_score DECIMAL(4, 2),
+
+    old_total_sales DECIMAL(10, 2),  -- Количество продаж во всем мире (в миллионах экземпляров)
+    new_total_sales DECIMAL(10, 2),
+
+    old_na_sales DECIMAL(10, 2),  -- Количество продаж в Северной Америке (в миллионах экземпляров)
+    new_na_sales DECIMAL(10, 2),
+
+    old_jp_sales DECIMAL(10, 2),  -- Количество продаж в Японии (в миллионах экземпляров)
+    new_jp_sales DECIMAL(10, 2),
+
+    old_pal_sales DECIMAL(10, 2),  -- Количество продаж в странах PAL (в миллионах экземпляров)
+    new_pal_sales DECIMAL(10, 2),
+
+    old_other_sales DECIMAL(10, 2),  -- Количество продаж в других регионах (в миллионах экземпляров)
+    new_other_sales DECIMAL(10, 2),
+
+    old_last_update DATE,  -- Дата последнего обновления данных
+    new_last_update DATE,
+
+    change_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+
+SELECT * FROM change_log_tbl_games; -- Проверка создания таблицы изменений
+
+/*
+    Функция триггера:
+    добавление записи в таблицу CHANGE_LOG_TBL_GAMES
+*/
+CREATE OR REPLACE FUNCTION log_changes_tbl_games()
+RETURNS TRIGGER AS $$
+BEGIN
+    -- Проверяем, изменились ли какие-либо из полей:
+    IF (NEW.title IS DISTINCT FROM OLD.title) THEN
+        INSERT INTO change_log_tbl_games (game_id, old_title, new_title)
+        VALUES (OLD.id, OLD.title, NEW.title);
+    END IF;
+
+    IF (NEW.console_id IS DISTINCT FROM OLD.console_id) THEN
+        INSERT INTO change_log_tbl_games (game_id, old_console_id, new_console_id)
+        VALUES (OLD.id, OLD.console_id, NEW.console_id);
+    END IF;
+
+    IF (NEW.genre_id IS DISTINCT FROM OLD.genre_id) THEN
+        INSERT INTO change_log_tbl_games (game_id, old_genre_id, new_genre_id)
+        VALUES (OLD.id, OLD.genre_id, NEW.genre_id);
+    END IF;
+
+    IF (NEW.publisher_id IS DISTINCT FROM OLD.publisher_id) THEN
+        INSERT INTO change_log_tbl_games (game_id, old_publisher_id, new_publisher_id)
+        VALUES (OLD.id, OLD.publisher_id, NEW.publisher_id);
+    END IF;
+
+    IF (NEW.developer_id IS DISTINCT FROM OLD.developer_id) THEN
+        INSERT INTO change_log_tbl_games (game_id, old_developer_id, new_developer_id)
+        VALUES (OLD.id, OLD.developer_id, NEW.developer_id);
+    END IF;
+
+	IF (NEW.img IS DISTINCT FROM OLD.img) THEN
+        INSERT INTO change_log_tbl_games (game_id, old_img, new_img)
+        VALUES (OLD.id, OLD.img, NEW.img);
+    END IF;
+
+	IF (NEW.release_date IS DISTINCT FROM OLD.release_date) THEN
+        INSERT INTO change_log_tbl_games (game_id, old_release_date, new_release_date)
+        VALUES (OLD.id, OLD.release_date, NEW.release_date);
+    END IF;
+
+	IF (NEW.critic_score IS DISTINCT FROM OLD.critic_score) THEN
+        INSERT INTO change_log_tbl_games (game_id, old_critic_score, new_critic_score)
+        VALUES (OLD.id, OLD.critic_score, NEW.critic_score);
+    END IF;
+
+	IF (NEW.total_sales IS DISTINCT FROM OLD.total_sales) THEN
+        INSERT INTO change_log_tbl_games (game_id, old_total_sales, new_total_sales)
+        VALUES (OLD.id, OLD.total_sales, NEW.total_sales);
+    END IF;
+
+	IF (NEW.na_sales IS DISTINCT FROM OLD.na_sales) THEN
+        INSERT INTO change_log_tbl_games (game_id, old_na_sales, new_na_sales)
+        VALUES (OLD.id, OLD.na_sales, NEW.na_sales);
+    END IF;
+
+	IF (NEW.jp_sales IS DISTINCT FROM OLD.jp_sales) THEN
+        INSERT INTO change_log_tbl_games (game_id, old_jp_sales, new_jp_sales)
+        VALUES (OLD.id, OLD.jp_sales, NEW.jp_sales);
+    END IF;
+
+	IF (NEW.pal_sales IS DISTINCT FROM OLD.pal_sales) THEN
+        INSERT INTO change_log_tbl_games (game_id, old_pal_sales, new_pal_sales)
+        VALUES (OLD.id, OLD.pal_sales, NEW.pal_sales);
+    END IF;
+
+	IF (NEW.other_sales IS DISTINCT FROM OLD.other_sales) THEN
+        INSERT INTO change_log_tbl_games (game_id, old_other_sales, new_other_sales)
+        VALUES (OLD.id, OLD.other_sales, NEW.other_sales);
+    END IF;
+
+	IF (NEW.last_update IS DISTINCT FROM OLD.last_update) THEN
+        INSERT INTO change_log_tbl_games (game_id, old_last_update, new_last_update)
+        VALUES (OLD.id, OLD.last_update, NEW.last_update);
+    END IF;
+
+    RETURN NEW; -- Возвращаем новые значения
+END;
+$$ LANGUAGE plpgsql;
+
+/*
+    Проверка работы триггера
+*/
+-- Удалим ранее созданные данные о тестовых играх
+DELETE FROM games
+WHERE title IN ('Updated: This is Test Game 1', 'Updated: This is Test Game 2');
+
+-- Вставить новую запись в таблицу GAMES
+INSERT INTO games (title, console_id, genre_id, publisher_id, developer_id, img, release_date, critic_score, total_sales, na_sales, jp_sales, pal_sales, other_sales, last_update)
+VALUES
+('This is Test Game 1', 1, 1, 1, 1, 'path/to/image1.jpg', '2020-01-01', 7.50, 10.50, 1.50, 3.20, 0.70, 6.10, CURRENT_DATE),
+('This is Test Game 2', 2, 2, 2, 2, 'path/to/image2.jpg', '2022-12-31', 8.30, 23.40, 7.50, 3.99, 1.23, 0.73, CURRENT_DATE);
+
+-- Проверим, что игры были добавлены
+SELECT * FROM games WHERE title IN ('This is Test Game 1', 'This is Test Game 2');
+
+-- Обновляем записи в таблице GAMES (вызываем триггер)
+UPDATE games
+SET
+    title = 'Updated: This is Test Game 1',
+    console_id = 3,
+    genre_id = 3,
+    publisher_id = 3,
+    developer_id = 3,
+    img = 'path/to/new/image3.jpg',
+    release_date = '2021-01-01',
+    critic_score = 2.50,
+    total_sales = 21.00,
+    na_sales = 3.00,
+    jp_sales = 6.40,
+    pal_sales = 1.40,
+    other_sales = 12.20,
+    last_update = CURRENT_DATE
+WHERE title = 'This is Test Game 1';
+
+UPDATE games
+SET
+    title = 'Updated: This is Test Game 2',
+    console_id = 4,
+    genre_id = 4,
+    publisher_id = 4,
+    developer_id = 4,
+    img = 'path/to/new/image4.jpg',
+    release_date = '2019-12-31',
+    critic_score = 5.10,
+    total_sales = 46.80,
+    na_sales = 15.00,
+    jp_sales = 8.99,
+    pal_sales = 2.46,
+    other_sales = 1.50,
+    last_update = CURRENT_DATE
+WHERE title = 'This is Test Game 2';
+
+-- Проверяем таблицу изменений
+SELECT *
+FROM change_log_tbl_games
+WHERE game_id IN (
+    SELECT id
+    FROM games
+    WHERE title IN ('Updated: This is Test Game 1', 'Updated: This is Test Game 2')
+)
+ORDER BY old_title;
