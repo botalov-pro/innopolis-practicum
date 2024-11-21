@@ -665,6 +665,16 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+/* Создание триггера */
+-- Удаляем триггер (если он существует)
+DROP TRIGGER IF EXISTS trigger_changes_log_tbl_games ON games;
+
+-- Создаем триггер
+CREATE TRIGGER trigger_changes_log_tbl_games
+AFTER UPDATE ON games
+FOR EACH ROW
+EXECUTE PROCEDURE log_changes_tbl_games();
+
 /*
     Проверка работы триггера
 */
